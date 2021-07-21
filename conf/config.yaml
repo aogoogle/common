@@ -1,0 +1,70 @@
+# JSS Local Global Configuration
+
+# jwt
+jwt:
+  signing-key: 'jss'
+  expires-time: 604800
+  buffer-time: 86400
+
+# zap日志配置
+zap:
+  level: 'info'
+  format: 'console'
+  prefix: '[JSS_Server]'
+  director: 'log'
+  link-name: 'latest_log'
+  show-line: true
+  encode-level: 'LowercaseColorLevelEncoder'
+  stacktrace-key: 'stacktrace'
+  log-in-console: true
+
+# redis
+redis:
+  db: 1
+  addr: '127.0.0.1:6379'
+  password: ''
+
+# system
+system:
+  env: 'public'  # Change to "develop" to skip authentication for development mode
+  addr: 8889
+  db-type: 'mysql'
+  oss-type: 'local'    # 控制oss选择走本期还是 七牛等其他仓 自行增加其他oss仓可以在 server/utils/upload/upload.go 中 NewOss函数配置
+  use-multipoint: false
+
+# captcha
+captcha:
+  key-long: 6
+  img-width: 240
+  img-height: 80
+
+# mysql
+mysql:
+  path: 'localhost'
+  config: ''
+  db-name: 'gva'
+  username: 'root'
+  password: '123456'
+  max-idle-conns: 10
+  max-open-conns: 100
+  log-mode: false
+  log-zap: ""
+
+# 上传目录配置
+local:
+  path: 'uploads/file'
+
+#股票采集提供商配置
+stock:
+  provider: "hengsheng"
+  waditu: "http://hq.sinajs.cn/list="     #新浪采集接口
+  hengsheng: "https://sandbox.hscloud.cn" #恒生采集接口
+
+#apollo服务器配置
+apollo:
+  appid: "jss.stock"
+  cluster: "dev"
+  ip: "http://192.168.10.249:9100"
+  namespace: "application.properties,dlq.kafka.properties"
+  isbackup: false
+
