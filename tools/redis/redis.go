@@ -69,6 +69,26 @@ func (jredis *JRedis)Delete(key string) bool {
 	return jredis.Delete(key)
 }
 
+// GetKeyForDB
+// @Description: 切换到toDb完后会自动切回db
+// @receiver jredis
+// @param key
+// @param db 默认db
+// @param toDb 要切到哪个db
+// @return interface{}
+// @create 2021-08-02 16:15:05
+func (jredis *JRedis)GetKeyForDB(key string, db int, toDb int) interface{} {
+	pipe := jredis.Pipeline()
+	pipe.Do("select", toDb)
+	pipe.Get(key).Result()
+	pipe.Do("select", db)
+	if cmders, err := pipe.Exec(); err == nil && len(cmders) == 3 {
+		result := jredis.GetCmdResult(cmders)
+		return result[1]
+	}
+	return nil
+}
+
 // GetCmdResult
 // @Description: 获取cmder中的结果
 // @receiver jredis
