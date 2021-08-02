@@ -3,6 +3,7 @@ package redis
 import (
 	"fmt"
 	"github.com/go-redis/redis"
+	"reflect"
 	"time"
 )
 
@@ -64,6 +65,114 @@ func (jredis *JRedis)Exists(key string) bool {
 // @receiver JRedis
 // @param key
 // @return bool
-func (JRedis *JRedis)Delete(key string) bool {
-	return JRedis.Delete(key)
+func (jredis *JRedis)Delete(key string) bool {
+	return jredis.Delete(key)
+}
+
+// GetCmdResult
+// @Description: 获取cmder中的结果
+// @receiver jredis
+// @param cmders
+// @return map[int]interface{}
+// @create 2021-08-02 15:20:03
+func (jredis *JRedis)GetCmdResult(cmders []redis.Cmder) map[int]interface{} {
+	strMap := make(map[int]interface{}, len(cmders))
+	for idx, cmder := range cmders {
+		//*ClusterSlotsCmd 未实现
+		switch reflect.TypeOf(cmder).String() {
+		case "*redis.Cmd":
+			cmd := cmder.(*redis.Cmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.StringCmd":
+			cmd := cmder.(*redis.StringCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.SliceCmd":
+			cmd := cmder.(*redis.SliceCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.StringSliceCmd":
+			cmd := cmder.(*redis.StringSliceCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.StringStringMapCmd":
+			cmd := cmder.(*redis.StringStringMapCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.StringIntMapCmd":
+			cmd := cmder.(*redis.StringIntMapCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.BoolCmd":
+			cmd := cmder.(*redis.BoolCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.BoolSliceCmd":
+			cmd := cmder.(*redis.BoolSliceCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.IntCmd":
+			cmd := cmder.(*redis.IntCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.FloatCmd":
+			cmd := cmder.(*redis.FloatCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.StatusCmd":
+			cmd := cmder.(*redis.StatusCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.TimeCmd":
+			cmd := cmder.(*redis.TimeCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.DurationCmd":
+			cmd := cmder.(*redis.DurationCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.StringStructMapCmd":
+			cmd := cmder.(*redis.StringStructMapCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.XMessageSliceCmd":
+			cmd := cmder.(*redis.XMessageSliceCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.XStreamSliceCmd":
+			cmd := cmder.(*redis.XStreamSliceCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.XPendingCmd":
+			cmd := cmder.(*redis.XPendingCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.XPendingExtCmd":
+			cmd := cmder.(*redis.XPendingExtCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.ZSliceCmd":
+			cmd := cmder.(*redis.ZSliceCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.ZWithKeyCmd":
+			cmd := cmder.(*redis.ZWithKeyCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.CommandsInfoCmd":
+			cmd := cmder.(*redis.CommandsInfoCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.GeoLocationCmd":
+			cmd := cmder.(*redis.GeoLocationCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		case "*redis.GeoPosCmd":
+			cmd := cmder.(*redis.GeoPosCmd)
+			strMap[idx], _ = cmd.Result()
+			break
+		}
+	}
+	return strMap
 }
