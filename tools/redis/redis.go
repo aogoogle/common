@@ -82,7 +82,8 @@ func (jredis *JRedis)GetKeyForDB(key string, db int, toDb int) interface{} {
 	pipe.Do("select", toDb)
 	pipe.Get(key).Result()
 	pipe.Do("select", db)
-	if cmders, err := pipe.Exec(); err == nil && len(cmders) == 3 {
+	cmders, err := pipe.Exec()
+	if err == nil && len(cmders) == 3 {
 		result := jredis.GetCmdResult(cmders)
 		return result[1]
 	}
