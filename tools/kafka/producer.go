@@ -12,16 +12,16 @@ type KafkaEvent struct {
 	Message string `json:"message"`
 }
 
-type KafkaProducerNotify interface {
+type KafkaProducerEvent interface {
 	KafkaSendSuccessedNotify(event KafkaEvent)
 }
 
 type KafkaProducer struct {
 	producer sarama.AsyncProducer
-	notify KafkaProducerNotify
+	notify KafkaProducerEvent
 }
 
-func InitWithUrl(url string, notify KafkaProducerNotify) (producer *KafkaProducer) {
+func InitWithUrl(url string, notify KafkaProducerEvent) (producer *KafkaProducer) {
 	fmt.Printf("producer_test\n")
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
