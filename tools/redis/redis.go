@@ -90,6 +90,21 @@ func (jredis *JRedis)GetKeyForDB(key string, db int, toDb int) interface{} {
 	return nil
 }
 
+func (jredis *JRedis)SetKeyForDB(key, value string, expiresTime int64, db, toDb int) error {
+	timer := time.Duration(expiresTime) * time.Second
+
+	pipe := jredis.Pipeline()
+	pipe.Do("select", toDb)
+	pipe.Set(key, value, timer).Err()
+	pipe.Do("select", db)
+	cmders, err := pipe.Exec()
+	if err == nil && len(cmders) == 3 {
+		result := jredis.GetCmdResult(cmders)
+		fmt.Println(result)
+	}
+	return nil
+}
+
 // GetCmdResult
 // @Description: 获取cmder中的结果
 // @receiver jredis
