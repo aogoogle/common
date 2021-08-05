@@ -56,15 +56,16 @@ func (k *KafkaProducer) SendMessage(topic string, key string, message string) {
 			Key:   sarama.StringEncoder(key),
 			Value: sarama.StringEncoder(message),
 		}
-		fmt.Println(msg)
+
 		k.producer.Input() <- msg
+
+		if k.notify != nil {
+			k.notify.KafkaSendSuccessedNotify(KafkaEvent{Topic: topic, Key: key, Message: message})
+		}
 
 		select {
 		case suc := <-k.producer.Successes():
 			fmt.Printf("offset: %d,  timestamp: %s", suc.Offset, suc.Timestamp.String())
-			if k.notify != nil {
-				k.notify.KafkaSendSuccessedNotify(KafkaEvent{Topic: topic, Key: key, Message: message})
-			}
 		case fail := <-k.producer.Errors():
 			fmt.Printf("err: %s\n", fail.Err.Error())
 		default:
