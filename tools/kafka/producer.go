@@ -6,11 +6,22 @@ import (
 	"strings"
 )
 
-type KafkaProducer struct {
-	producer sarama.AsyncProducer
+type KafkaEvent struct {
+	Topic   string `json:"topic"`
+	Key     string `json:"key"`
+	Message string `json:"message"`
 }
 
-func InitWithUrl(url string) (producer *KafkaProducer) {
+type KafkaProducerNotify interface {
+	KafkaSendSuccessedNotify(event KafkaEvent)
+}
+
+type KafkaProducer struct {
+	producer sarama.AsyncProducer
+	notify KafkaProducerNotify
+}
+
+func InitWithUrl(url string, notify KafkaProducerNotify) (producer *KafkaProducer) {
 	fmt.Printf("producer_test\n")
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
@@ -23,7 +34,7 @@ func InitWithUrl(url string) (producer *KafkaProducer) {
 	config.Version = sarama.V0_11_0_2
 
 	kafkaProducer := new(KafkaProducer)
-
+	kafkaProducer.notify = notify
 	var err error
 	client, err := sarama.NewClient(strings.Split(url, ","), config)
 	if err != nil {
@@ -38,7 +49,7 @@ func InitWithUrl(url string) (producer *KafkaProducer) {
 	return kafkaProducer
 }
 
-func (k *KafkaProducer)SendMessage(topic string, key string, message string) {
+func (k *KafkaProducer) SendMessage(topic string, key string, message string) {
 	if k.producer != nil {
 		msg := &sarama.ProducerMessage{
 			Topic: topic,
@@ -51,10 +62,17 @@ func (k *KafkaProducer)SendMessage(topic string, key string, message string) {
 		select {
 		case suc := <-k.producer.Successes():
 			fmt.Printf("offset: %d,  timestamp: %s", suc.Offset, suc.Timestamp.String())
+			if k.notify != nil {
+				k.notify.KafkaSendSuccessedNotify(KafkaEvent{Topic: topic, Key: key, Message: message})
+			}
 		case fail := <-k.producer.Errors():
 			fmt.Printf("err: %s\n", fail.Err.Error())
 		default:
 			fmt.Printf("default\n")
 		}
 	}
+}
+
+func (k *KafkaProducer) SendEvent(event KafkaEvent) {
+	k.SendMessage(event.Topic, event.Key, event.Message)
 }

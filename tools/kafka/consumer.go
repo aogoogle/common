@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type KafaConsumerEvent interface {
-	KafaMessageNotify(topic, key, message string)
-	KafaExceptionNotify(err error)
+type KafkaConsumerEvent interface {
+	KafkaMessageNotify(topic, key, message string)
+	KafkaExceptionNotify(err error)
 }
 
-func consumerRun(url string, topic string, notify KafaConsumerEvent) {
+func consumerRun(url string, topic string, notify KafkaConsumerEvent) {
 	fmt.Println(topic+"-->start kafka consumer monitor......")
 
 	config := sarama.NewConfig()
@@ -25,14 +25,14 @@ func consumerRun(url string, topic string, notify KafaConsumerEvent) {
 	client, err := sarama.NewClient(strings.Split(url, ","), config)
 	if err != nil {
 		if notify != nil {
-			go notify.KafaExceptionNotify(err)
+			go notify.KafkaExceptionNotify(err)
 		}
 		return
 	}
 	consumer, err := sarama.NewConsumerFromClient(client)
 	if err != nil {
 		if notify != nil {
-			go notify.KafaExceptionNotify(err)
+			go notify.KafkaExceptionNotify(err)
 		}
 		return
 	}
@@ -41,7 +41,7 @@ func consumerRun(url string, topic string, notify KafaConsumerEvent) {
 	partitionConsumer, err := consumer.ConsumePartition(topic, 0, sarama.OffsetNewest)
 	if err != nil {
 		if notify != nil {
-			go notify.KafaExceptionNotify(err)
+			go notify.KafkaExceptionNotify(err)
 		}
 		return
 	}
@@ -51,17 +51,17 @@ func consumerRun(url string, topic string, notify KafaConsumerEvent) {
 		select {
 		case msg := <-partitionConsumer.Messages():
 			if notify != nil {
-				go notify.KafaMessageNotify(msg.Topic, string(msg.Key), string(msg.Value))
+				go notify.KafkaMessageNotify(msg.Topic, string(msg.Key), string(msg.Value))
 			}
 		case err := <-partitionConsumer.Errors():
 			if notify != nil {
-				go notify.KafaExceptionNotify(err)
+				go notify.KafkaExceptionNotify(err)
 			}
 		}
 	}
 }
 
-func StartConsumerMonitor(url string, topic string, notify KafaConsumerEvent) {
+func StartConsumerMonitor(url string, topic string, notify KafkaConsumerEvent) {
 	go func() {
 		consumerRun(url, topic, notify)
 	}()
