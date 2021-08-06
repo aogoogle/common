@@ -65,11 +65,11 @@ func (k *KafkaProducer) SendMessage(topic string, key string, message string) {
 
 		select {
 		case suc := <-k.producer.Successes():
-			fmt.Printf("offset: %d,  timestamp: %s", suc.Offset, suc.Timestamp.String())
+			fmt.Println(fmt.Sprintf("offset: %d,  timestamp: %s", suc.Offset, suc.Timestamp.String()))
 		case fail := <-k.producer.Errors():
-			fmt.Printf("err: %s\n", fail.Err.Error())
+			fmt.Println(fmt.Sprintf("err: %s", fail.Err.Error()))
 		default:
-			fmt.Printf("default\n")
+			fmt.Println("default")
 		}
 	}
 }
