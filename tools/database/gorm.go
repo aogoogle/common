@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/plugin/dbresolver"
 	"sync"
 )
 
@@ -17,15 +18,17 @@ type JSSGorm struct {
 }
 
 // Gorm
-// @Description:
+// @Description: 实始化Gorm
 // @param dsn
 // @param maxIdelConns
 // @param maxOpenConns
 // @return *JSSGorm
-func Gorm(dsn, logZap string, maxIdelConns, maxOpenConns int) *JSSGorm {
+func Gorm(masterDsn, slaverDsn []string, logZap string, maxIdelConns, maxOpenConns int) *JSSGorm {
 	once.Do(func() {
-		instance = &JSSGorm{
-			initMySql(dsn, logZap, maxIdelConns, maxOpenConns),
+		if len(masterDsn) > 0 {
+			instance = &JSSGorm{
+				initMySql(masterDsn, slaverDsn, logZap, maxIdelConns, maxOpenConns),
+			}
 		}
 	})
 	return instance
@@ -38,14 +41,14 @@ func Gorm(dsn, logZap string, maxIdelConns, maxOpenConns int) *JSSGorm {
 // @param idelCounts
 // @param openCounts
 // @return *gorm.DB
-func initMySql(dsn, logZap string, idelCounts, openCounts int) *gorm.DB {
-	mysqlConfig := mysql.Config {
-		DSN:                       dsn,   // DSN data source name
-		DefaultStringSize:         191,   // string 类型字段的默认长度
-		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
-		DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
-		DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
-		SkipInitializeWithVersion: false, // 根据版本自动配置
+func initMySql(masterDsn, slaverDsn []string, logZap string, idelCounts, openCounts int) *gorm.DB {
+	mysqlConfig := mysql.Config{
+		DSN:                       masterDsn[0], // DSN data source name
+		DefaultStringSize:         191,          // string 类型字段的默认长度
+		DisableDatetimePrecision:  true,         // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
+		DontSupportRenameIndex:    true,         // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
+		DontSupportRenameColumn:   true,         // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
+		SkipInitializeWithVersion: false,        // 根据版本自动配置
 	}
 	if db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(logZap, false)); err != nil {
 		fmt.Println("MySQL启动异常", zap.Any("err", err))
@@ -54,6 +57,20 @@ func initMySql(dsn, logZap string, idelCounts, openCounts int) *gorm.DB {
 		sqlDB, _ := db.DB()
 		sqlDB.SetMaxIdleConns(idelCounts)
 		sqlDB.SetMaxOpenConns(openCounts)
+
+		var master, slaver []gorm.Dialector
+		for _, dsn := range masterDsn {
+			master = append(master, mysql.Open(dsn))
+		}
+		for _, dsn := range slaverDsn {
+			slaver = append(slaver, mysql.Open(dsn))
+		}
+		dbResolverCfg := dbresolver.Config{
+			Sources:  master,
+			Replicas: slaver,
+			Policy:   dbresolver.RandomPolicy{}}
+		readWritePlugin := dbresolver.Register(dbResolverCfg)
+		db.Use(readWritePlugin)
 		return db
 	}
 }
