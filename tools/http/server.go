@@ -49,7 +49,11 @@ func do(method string, url string, params Params) (r Responses, e error) {
 	// 参数
 	addData(request, params.Data)
 	r.Response, e = http.DefaultClient.Do(request)
-	defer r.Response.Body.Close()
+	defer func() {
+		if r.Response != nil {
+			r.Response.Body.Close()
+		}
+	}()
 	if e != nil {
 		return
 	}
