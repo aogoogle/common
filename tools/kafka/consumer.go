@@ -17,7 +17,7 @@ func consumerRun(url string, topic string, notify KafkaConsumerEvent) {
 
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
-	config.Version = sarama.V0_11_0_2
+	//config.Version = sarama.V0_11_0_2
 	config.Net.SASL.Enable = true
 	config.Net.SASL.Password = "admin-secret"
 	config.Net.SASL.User = "admin"
